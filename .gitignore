@@ -1,0 +1,8 @@
+# Don't commit state or logs (VM manages these)
+data/state.json
+data/history.json
+data/alertas.json
+data/*.log
+logs/
+__pycache__/
+*.pyc
