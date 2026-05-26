@@ -1,0 +1,8 @@
+  File "/home/work/.openclaw/workspace/projects/leilao-monitor/run_monitor.py", line 159
+    print(f'Lote {bid} — {lote[\"modelo\"]} {lote[\"ano\"]}...')
+                                ^
+SyntaxError: unexpected character after line continuation character
+  File "/home/work/.openclaw/workspace/projects/leilao-monitor/run_monitor.py", line 159
+    print(f'Lote {bid} — {lote[\"modelo\"]} {lote[\"ano\"]}...')
+                                ^
+SyntaxError: unexpected character after line continuation character

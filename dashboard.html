@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang='pt-BR'>
+<head>
+<meta charset='UTF-8'>
+<title>Monitor Leilao Motos — AlfaPrime</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a0a1a; color: #e0e0e0; min-height: 100vh; }
+  .header { background: linear-gradient(135deg, #e94560, #1b2a4a); padding: 30px 40px; display: flex; justify-content: space-between; align-items: center; }
+  .header h1 { font-size: 22pt; font-weight: 800; color: white; }
+  .header .sub { font-size: 11pt; color: rgba(255,255,255,0.7); margin-top: 4px; }
+  .badge { background: #e94560; color: white; padding: 6px 16px; border-radius: 20px; font-size: 10pt; font-weight: 700; }
+  .content { padding: 30px 40px; max-width: 1200px; margin: 0 auto; }
+  .section-title { font-size: 14pt; color: #e94560; font-weight: 700; margin-bottom: 15px; margin-top: 30px; padding-bottom: 8px; border-bottom: 2px solid #1b2a4a; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+  .card { background: #12122a; border-radius: 14px; padding: 22px; border: 1.5px solid #1e2a4a; transition: transform 0.2s, border-color 0.2s; }
+  .card:hover { transform: translateY(-3px); border-color: #e94560; }
+  .card-lote { font-size: 9pt; color: #e94560; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+  .card-modelo { font-size: 16pt; font-weight: 800; color: white; margin-top: 6px; }
+  .card-ano { font-size: 11pt; color: #888; margin-top: 2px; }
+  .card-info { display: flex; gap: 12px; margin-top: 14px; }
+  .info-chip { background: #1e2a4a; padding: 5px 12px; border-radius: 8px; font-size: 9pt; color: #a8c8e8; }
+  .card-metrics { margin-top: 14px; }
+  .metric { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #1e2a4a; font-size: 11pt; }
+  .metric:last-child { border: none; }
+  .metric .key { color: #888; }
+  .metric .val { font-weight: 700; color: white; }
+  .metric .val.green { color: #27ae60; }
+  .metric .val.red { color: #e94560; }
+  .metric .val.blue { color: #4a9fd4; }
+  .card-link { display: inline-block; margin-top: 14px; padding: 8px 18px; background: #e94560; color: white; border-radius: 8px; text-decoration: none; font-size: 10pt; font-weight: 700; text-align: center; transition: background 0.2s; }
+  .card-link:hover { background: #d63050; }
+  .card-link:hover { background: #c02040; }
+  /* Score badge */
+  .score { font-size: 28pt; font-weight: 900; text-align: center; padding: 10px; border-radius: 10px; margin-bottom: 10px; }
+  .score.top { background: linear-gradient(135deg, #27ae60, #1e8449); color: white; }
+  .score.mid { background: linear-gradient(135deg, #2980b9, #1a5276); color: white; }
+  .score.risk { background: linear-gradient(135deg, #e67e22, #d35400); color: white; }
+  .score-label { text-align: center; font-size: 9pt; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+  /* Flowchart */
+  .flowchart { background: #12122a; border-radius: 14px; padding: 30px; border: 1.5px solid #1e2a4a; margin-top: 20px; }
+  .flow-row { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+  .flow-node { background: #1e2a4a; border-radius: 10px; padding: 14px 20px; text-align: center; min-width: 160px; flex: 1; }
+  .flow-node.start { background: #e94560; }
+  .flow-node.end { background: #27ae60; }
+  .flow-node.filter { background: #2980b9; }
+  .flow-node.action { background: #8e44ad; }
+  .flow-node-title { font-size: 11pt; font-weight: 700; color: white; }
+  .flow-node-sub { font-size: 9pt; color: rgba(255,255,255,0.6); margin-top: 4px; }
+  .flow-arrow { font-size: 20pt; color: #e94560; }
+  .flow-section { margin-top: 25px; }
+  .flow-section-title { font-size: 12pt; color: #a8c8e8; font-weight: 700; margin-bottom: 12px; }
+  .flow-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .flow-tag { background: #1e2a4a; padding: 4px 12px; border-radius: 15px; font-size: 9pt; color: #a8c8e8; }
+  .flow-tag.red { background: #e94560; color: white; }
+  /* Sites */
+  .site-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin-top: 10px; }
+  .site-card { background: #12122a; border-radius: 10px; padding: 16px; border: 1.5px solid #1e2a4a; }
+  .site-card h3 { font-size: 11pt; color: white; margin-bottom: 6px; }
+  .site-card p { font-size: 9pt; color: #888; line-height: 1.4; }
+  .site-card .url { color: #4a9fd4; font-size: 9pt; word-break: break-all; }
+  /* filtros */
+  .filter-table { background: #12122a; border-radius: 12px; overflow: hidden; border: 1.5px solid #1e2a4a; }
+  .filter-table table { width: 100%; border-collapse: collapse; }
+  .filter-table th { background: #1b2a4a; color: white; padding: 12px 16px; text-align: left; font-size: 10pt; }
+  .filter-table td { padding: 10px 16px; border-bottom: 1px solid #1e2a4a; font-size: 10pt; }
+  .filter-table tr:last-child td { border: none; }
+  .filter-table .check { color: #27ae60; font-weight: 700; }
+  .filter-table .cross { color: #e94560; }
+  .filter-table .val { font-weight: 700; color: white; }
+  /* cron status */
+  .cron-status { background: #12122a; border-radius: 12px; padding: 20px; border: 1.5px solid #1e2a4a; display: flex; gap: 30px; align-items: center; margin-top: 15px; }
+  .cron-dot { width: 14px; height: 14px; border-radius: 50%; background: #27ae60; box-shadow: 0 0 10px #27ae60; }
+  .cron-dot.off { background: #e94560; box-shadow: 0 0 10px #e94560; }
+  .footer { text-align: center; padding: 30px; font-size: 9pt; color: #444; border-top: 1px solid #1e2a4a; margin-top: 40px; }
+  h2 { color: white; font-size: 16pt; margin-bottom: 15px; }
+  p { color: #aaa; font-size: 11pt; line-height: 1.6; }
+  .refresh { font-size: 9pt; color: #555; margin-top: 20px; text-align: right; }
+</style>
+</head>
+<body>
+
+<div class='header'>
+  <div>
+    <h1>🏍️ Monitor Leilões de Motos</h1>
+    <div class='sub'>AlfaPrime — Lucas Oliveira | Atualizado em tempo real</div>
+  </div>
+  <div class='badge'>BETA v1.0</div>
+</div>
+
+<div class='content'>
+
+  <!-- STATUS DO MONITOR -->
+  <h2 class='section-title'>📡 Status do Monitor</h2>
+  <div class='cron-status'>
+    <div class='cron-dot' id='cronDot'></div>
+    <div>
+      <div style='font-size:12pt; font-weight:700; color:white;'>Monitor Ativo</div>
+      <div style='font-size:10pt; color:#888; margin-top:4px;'>Verificação a cada 15 minutos —Última: <span id='lastCheck'>carregando...</span></div>
+    </div>
+    <div style='margin-left:auto; text-align:right;'>
+      <div style='font-size:18pt; font-weight:900; color:#e94560;' id='activeCount'>4</div>
+      <div style='font-size:9pt; color:#888;'>lotes monitorados</div>
+    </div>
+  </div>
+
+  <!-- LOTES MONITORADOS -->
+  <h2 class='section-title'>🎯 Lotes em Acompanhamento</h2>
+  <div class='card-grid'>
+
+    <!-- LOTE 54: MELHOR OPÇÃO -->
+    <div class='card'>
+      <div class='score top'>🥇 #1</div>
+      <div class='card-lote'>Lote 0054</div>
+      <div class='card-modelo'>Honda CG 160 Start</div>
+      <div class='card-ano'>2024/2024 — Vermelho</div>
+      <div class='card-info'>
+        <span class='info-chip'>🏆 Melhor opção</span>
+        <span class='info-chip'>Documento OK</span>
+      </div>
+      <div class='card-metrics'>
+        <div class='metric'><span class='key'>Lance inicial</span><span class='val'>R$ 5.800</span></div>
+        <div class='metric'><span class='key'>Custo total est.</span><span class='val'>R$ 7.600</span></div>
+        <div class='metric'><span class='key'>FIPE</span><span class='val blue'>R$ 16.322</span></div>
+        <div class='metric'><span class='key'>Venda mercado</span><span class='val green'>R$ 16-19k</span></div>
+        <div class='metric'><span class='key'>Margem bruta</span><span class='val green'>R$ 8.400 a 11.400</span></div>
+        <div class='metric'><span class='key'>Margem %</span><span class='val green'>110-150%</span></div>
+      </div>
+      <a class='card-link' href='https://www.sumareleiloes.com.br/lotes/a2d784ba-42d8-4364-8d70-5df8f9a3e852' target='_blank'>Ver lote →</a>
+    </div>
+
+    <!-- LOTE 65 -->
+    <div class='card'>
+      <div class='score top'>🥈 #2</div>
+      <div class='card-lote'>Lote 0065</div>
+      <div class='card-modelo'>Honda CG 160 Start</div>
+      <div class='card-ano'>2023/2023 — Azul</div>
+      <div class='card-info'>
+        <span class='info-chip'>⭐ Alta recom.</span>
+        <span class='info-chip'>Documento OK</span>
+      </div>
+      <div class='card-metrics'>
+        <div class='metric'><span class='key'>Lance inicial</span><span class='val'>R$ 5.550</span></div>
+        <div class='metric'><span class='key'>Custo total est.</span><span class='val'>R$ 7.300</span></div>
+        <div class='metric'><span class='key'>FIPE</span><span class='val blue'>R$ 15.558</span></div>
+        <div class='metric'><span class='key'>Venda mercado</span><span class='val green'>R$ 15-17k</span></div>
+        <div class='metric'><span class='key'>Margem bruta</span><span class='val green'>R$ 7.700 a 9.700</span></div>
+        <div class='metric'><span class='key'>Margem %</span><span class='val green'>105-133%</span></div>
+      </div>
+      <a class='card-link' href='https://www.sumareleiloes.com.br/lotes/52c0f388-4e66-4855-af92-7aedd5cd26ae' target='_blank'>Ver lote →</a>
+    </div>
+
+    <!-- LOTE 56 -->
+    <div class='card'>
+      <div class='score mid'>🥉 #3</div>
+      <div class='card-lote'>Lote 0056</div>
+      <div class='card-modelo'>Honda CG 160 Fan</div>
+      <div class='card-ano'>2021/2021 — Vermelho</div>
+      <div class='card-info'>
+        <span class='info-chip'>👍 Boa opção</span>
+        <span class='info-chip'>Documento OK</span>
+      </div>
+      <div class='card-metrics'>
+        <div class='metric'><span class='key'>Lance inicial</span><span class='val'>R$ 5.150</span></div>
+        <div class='metric'><span class='key'>Custo total est.</span><span class='val'>R$ 6.900</span></div>
+        <div class='metric'><span class='key'>FIPE</span><span class='val blue'>R$ 14.887</span></div>
+        <div class='metric'><span class='key'>Venda mercado</span><span class='val green'>R$ 13-17k</span></div>
+        <div class='metric'><span class='key'>Margem bruta</span><span class='val green'>R$ 6.100 a 10.100</span></div>
+        <div class='metric'><span class='key'>Margem %</span><span class='val green'>88-146%</span></div>
+      </div>
+      <a class='card-link' href='https://www.sumareleiloes.com.br/lotes/fb99a7d3-0cf9-43ac-b66b-e043e648e6cc' target='_blank'>Ver lote →</a>
+    </div>
+
+    <!-- LOTE 59 -->
+    <div class='card'>
+      <div class='score risk'>⚠️ #4</div>
+      <div class='card-lote'>Lote 0059</div>
+      <div class='card-modelo'>Shineray XY125-6A</div>
+      <div class='card-ano'>2025/2025 — Branca</div>
+      <div class='card-info'>
+        <span class='info-chip'>⚠️ Risco médio</span>
+        <span class='info-chip'>Documento OK</span>
+      </div>
+      <div class='card-metrics'>
+        <div class='metric'><span class='key'>Lance inicial</span><span class='val'>R$ 3.300</span></div>
+        <div class='metric'><span class='key'>Custo total est.</span><span class='val'>R$ 4.500</span></div>
+        <div class='metric'><span class='key'>FIPE</span><span class='val blue'>R$ 9.012</span></div>
+        <div class='metric'><span class='key'>Venda mercado</span><span class='val green'>R$ 7-10k</span></div>
+        <div class='metric'><span class='key'>Margem bruta</span><span class='val'>R$ 2.500 a 5.500</span></div>
+        <div class='metric'><span class='key'>Margem %</span><span class='val'>55-122%</span></div>
+      </div>
+      <a class='card-link' href='https://www.sumareleiloes.com.br/lotes/89022928-cd28-4e3b-9c23-d913b0528975' target='_blank'>Ver lote →</a>
+    </div>
+  </div>
+
+  <!-- FLUXOGRAMA -->
+  <h2 class='section-title'>🔀 Fluxograma — Como Encontrar Oportunidades</h2>
+  <div class='flowchart'>
+
+    <!-- ETAPA 1: BUSCA -->
+    <div class='flow-section'>
+      <div class='flow-section-title'>ETAPA 1 — Identificar Leilões com Motos</div>
+      <div class='flow-row'>
+        <div class='flow-node start'>
+          <div class='flow-node-title'>🚀 Início</div>
+          <div class='flow-node-sub'>Definir criteria de busca</div>
+        </div>
+        <span class='flow-arrow'>→</span>
+        <div class='flow-node filter'>
+          <div class='flow-node-title'>Filtro 1: Tipo</div>
+          <div class='flow-node-sub'>Prefeitura / Detran / BNDES</div>
+        </div>
+        <span class='flow-arrow'>→</span>
+        <div class='flow-node filter'>
+          <div class='flow-node-title'>Filtro 2: Valor</div>
+          <div class='flow-node-sub'>Lance inicial R$ 1K–6K</div>
+        </div>
+        <span class='flow-arrow'>→</span>
+        <div class='flow-node filter'>
+          <div class='flow-node-title'>Filtro 3: Documento</div>
+          <div class='flow-node-sub'>Com direito a circulação</div>
+        </div>
+        <span class='flow-arrow'>→</span>
+        <div class='flow-node action'>
+          <div class='flow-node-title'>Ação</div>
+          <div class='flow-node-sub'>Listar todos os lotes</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ETAPA 2: AVALIAÇÃO -->
+    <div class='flow-section'>
+      <div class='flow-section-title'>ETAPA 2 — Avaliar Cada Lote (Filtro Rápido)</div>
+      <div class='flow-row'>
+        <div class='flow-node action'>
+          <div class='flow-node-title'>✅ Separar Motos</div>
+          <div class='flow-node-sub'>Honda/Yamaha/Biz優先</div>
+        </div>
+        <span class='flow-arrow'>→</span>
+        <div class='flow-node action'>
+          <div class='flow-node-title'>✅ Verificar Doc</div>
+          <div class='flow-node-sub'>Documento OK = seguir</div>
+        </div>
+        <span class='flow-arrow'>→</span>
+        <div class='flow-node action'>
+          <div class='flow-node-title'>✅ Calcular Margem</div>
+          <div class='flow-node-sub'>Lance + 5% + R$ 1.500</div>
+        </div>
+        <span class='flow-arrow'>→</span>
+        <div class='flow-node action'>
+          <div class='flow-node-title'>✅ Comparar FIPE</div>
+          <div class='flow-node-sub'>Margem > 50% = oportunidadE</div>
+        </div>
+        <span class='flow-arrow'>→</span>
+        <div class='flow-node end'>
+          <div class='flow-node-title'>🎯 Blacklist</div>
+          <div class='flow-node-sub'>Sucata/Motor inservível = IGNORAR</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ETAPA 3: DECISÃO -->
+    <div class='flow-section'>
+      <div class='flow-section-title'>ETAPA 3 — Decisão de Lance</div>
+      <div class='flow-row'>
+        <div class='flow-node'>
+          <div class='flow-node-title'>Lance &lt; 50% FIPE</div>
+          <div class='flow-node-sub'>🟢 Ir com tudo</div>
+        </div>
+        <span class='flow-arrow'>→</span>
+        <div class='flow-node'>
+          <div class='flow-node-title'>Lance 50-80% FIPE</div>
+          <div class='flow-node-sub'>🟡 Avaliar conservação</div>
+        </div>
+        <span class='flow-arrow'>→</span>
+        <div class='flow-node'>
+          <div class='flow-node-title'>Lance &gt; 80% FIPE</div>
+          <div class='flow-node-sub'>🟠 Arriscado — monitorar</div>
+        </div>
+        <span class='flow-arrow'>→</span>
+        <div class='flow-node'>
+          <div class='flow-node-title'>Lance &gt; FIPE</div>
+          <div class='flow-node-sub'>🔴 NÃO licitar</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CRITÉRIOS -->
+    <div style='margin-top:25px;'>
+      <div class='flow-section-title'>📋 Critérios de Busca nos Sites</div>
+      <div class='flow-tags'>
+        <span class='flow-tag red'>🚫 Sucata</span>
+        <span class='flow-tag red'>🚫 Motor inservível</span>
+        <span class='flow-tag red'>🚫 Sem documento</span>
+        <span class='flow-tag'>✅ Honda CG 160</span>
+        <span class='flow-tag'>✅ Yamaha Fazer / Factor</span>
+        <span class='flow-tag'>✅ Biz 125/150</span>
+        <span class='flow-tag'>✅ Ano 2018+</span>
+        <span class='flow-tag'>✅ Com documento</span>
+        <span class='flow-tag'>✅ Lance &lt; R$ 8.000</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SITES PARA BUSCAR -->
+  <h2 class='section-title'>🌐 Sites Prioritários para Busca</h2>
+  <div class='site-grid'>
+    <div class='site-card'>
+      <h3>🏛️ Sumaré Leilões</h3>
+      <p>Prefeitura de Vinhedo/Valinhos. Motos com documento, bom estado. Lancesstarting R$ 1K.</p>
+      <div class='url'>sumareleiloes.com.br</div>
+    </div>
+    <div class='site-card'>
+      <h3>🏛️ Guariglia Leilões</h3>
+      <p>Leiloeiro oficial SP. Carros e motos. Boa documentação.</p>
+      <div class='url'>guariglialeiloes.com.br</div>
+    </div>
+    <div class='site-card'>
+      <h3>🏛️ Sp-leiloes</h3>
+      <p>Detran SP. Veículos baixados e apreendidos.</p>
+      <div class='url'>sp-leiloes.com.br</div>
+    </div>
+    <div class='site-card'>
+      <h3>🏛️ Castello Leilões</h3>
+      <p>Municipios de SP. Motos com documento de circulação.</p>
+      <div class='url'>castelloleiloes.com.br</div>
+    </div>
+    <div class='site-card'>
+      <h3>🏛️ Mix Leilões</h3>
+      <p>Vários municípios SP. Bom para encontrar motos de frotas.</p>
+      <div class='url'>mixleiloes.com.br</div>
+    </div>
+    <div class='site-card'>
+      <h3>🏛️ Helbor Leilões</h3>
+      <p>Bancos e financeiras. Veículos leves e motos.</p>
+      <div class='url'>helborleiloes.com.br</div>
+    </div>
+  </div>
+
+  <!-- TABELA DE FILTROS -->
+  <h2 class='section-title'>✅ Checklist de Avaliação de Lote</h2>
+  <div class='filter-table'>
+    <table>
+      <thead>
+        <tr>
+          <th>Critério</th>
+          <th>Ideal</th>
+          <th>Aceitável</th>
+          <th>Descartar</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Tipo de venda</td>
+          <td class='val'>Prefeitura / BNDES</td>
+          <td>Detran / Bancos</td>
+          <td class='cross'>Particular</td>
+        </tr>
+        <tr>
+          <td>Documento</td>
+          <td class='check'>✅ Com direito a circulação</td>
+          <td>Baixado (revalidar)</td>
+          <td class='cross'>🚫 Sucata / Sem documento</td>
+        </tr>
+        <tr>
+          <td>Marca</td>
+          <td class='val'>Honda / Yamaha</td>
+          <td>Pop / Biz / Titan</td>
+          <td class='cross'>Marcas desconhecidas</td>
+        </tr>
+        <tr>
+          <td>Ano</td>
+          <td class='val'>2020+</td>
+          <td>2015-2019</td>
+          <td class='cross'>&lt; 2010</td>
+        </tr>
+        <tr>
+          <td>Lance vs FIPE</td>
+          <td class='val'>&lt; 50% da FIPE</td>
+          <td>50-75% da FIPE</td>
+          <td class='cross'>&gt; 90% da FIPE</td>
+        </tr>
+        <tr>
+          <td>Margem potencial</td>
+          <td class='check'>✅ &gt; 80%</td>
+          <td>50-80%</td>
+          <td class='cross'>&lt; 30%</td>
+        </tr>
+        <tr>
+          <td>KM / Conservação</td>
+          <td class='val'>&lt; 30.000 km</td>
+          <td>30.000-60.000 km</td>
+          <td class='cross'>&gt; 80.000 km</td>
+        </tr>
+        <tr>
+          <td>Motor / Câmbio</td>
+          <td class='check'>✅ Declarado OK</td>
+          <td>Não mencionado</td>
+          <td class='cross'>🚫 Motor inservível</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<div class='footer'>
+  Sistema Monitor Leilao Motos — AlfaPrime<br>
+  Desenvolvido por Genspark Claw para Lucas Oliveira<br>
+  <span style='color:#e94560;'>⚡ Dados atualizados automaticamente a cada 15 minutos</span>
+</div>
+
+<script>
+  // Auto-refresh a cada 15 min
+  setTimeout(() => location.reload(), 15 * 60 * 1000);
+  // Mostrar última atualização
+  document.getElementById('lastCheck').textContent = new Date().toLocaleString('pt-BR');
+</script>
+
+</body>
+</html>
